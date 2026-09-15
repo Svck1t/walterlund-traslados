@@ -456,13 +456,13 @@ function toast(msg) {
 async function api(params, method = 'GET', body = null) {
   let url = CONFIG.API_URL;
   if (method === 'GET') {
-    url += '?' + new URLSearchParams(params).toString();
+    url += '?' + new URLSearchParams({ ...params, sistema: 'guias' }).toString();
     const res = await fetch(url);
     return res.json();
   } else {
     const res = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify(body)
+      body: JSON.stringify({ ...body, sistema: 'guias' })
     });
     return res.json();
   }
