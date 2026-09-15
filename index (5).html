@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Guías de Traslado — Walter Lund</title>
+<style>
+  :root {
+    --paper: #F3EFE6;
+    --paper-card: #FFFDF8;
+    --paper-line: #DCD5C2;
+    --ink: #26241F;
+    --ink-soft: #6B6455;
+    --route: #3D5A5B;
+    --route-dark: #2B4142;
+    --ok: #46693E;
+    --ok-bg: #E7EEE2;
+    --warn: #A8471F;
+    --warn-bg: #F3E4DA;
+    --pending: #B98A2E;
+    --pending-bg: #F5EBD6;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Libre Franklin', 'Segoe UI', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .folio-num {
+    font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  }
+
+  header.top {
+    padding: 18px 20px 14px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  header.top h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    margin: 0;
+  }
+  header.top .who {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  header.top .who button {
+    background: none;
+    border: none;
+    color: var(--route);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 6px;
+  }
+
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 18px 60px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* --- Selección de usuario --- */
+  .intro {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 4px 0 24px;
+  }
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  select, input[type=text], input[type=number], input[type=date], textarea {
+    width: 100%;
+    padding: 12px 12px;
+    font-size: 16px;
+    font-family: inherit;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius);
+    background: var(--paper-card);
+    color: var(--ink);
+  }
+  select:disabled { opacity: 0.5; }
+  textarea { resize: vertical; min-height: 70px; }
+
+  button.primary {
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: var(--route);
+    color: var(--paper-card);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  button.primary:active { background: var(--route-dark); }
+  button.primary:disabled { opacity: 0.4; }
+
+  button.ghost {
+    width: 100%;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    background: none;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  /* --- Menú principal --- */
+  .menu-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--paper-card);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .menu-card .tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--route);
+    margin-bottom: 6px;
+  }
+  .menu-card h2 {
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+  .menu-card p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .menu-card .count {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--pending-bg);
+    color: var(--pending);
+  }
+
+  /* --- Encabezado de flujo --- */
+  .flow-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .back-btn {
+    background: none;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius);
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .flow-header h2 { font-size: 16px; margin: 0; }
+
+  /* --- Ruta origen -> destino --- */
+  .route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 22px;
+    padding: 12px 14px;
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-left: 3px solid var(--route);
+    border-radius: var(--radius);
+  }
+  .route .stop { font-size: 14px; font-weight: 700; }
+  .route .arrow { color: var(--route); font-size: 16px; }
+
+  /* --- Input de archivo --- */
+  .file-drop {
+    border: 2px dashed var(--ink);
+    border-radius: var(--radius);
+    padding: 22px 14px;
+    text-align: center;
+    background: var(--paper-card);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .file-drop.has-file {
+    border-style: solid;
+    color: var(--ok);
+    font-weight: 600;
+  }
+  #archivoInput { display: none; }
+
+  /* --- Lista pendientes --- */
+  .guia-card {
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-left: 3px solid var(--pending);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .guia-card .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .guia-card .folio { font-size: 15px; font-weight: 700; }
+  .guia-card .kilos { font-size: 13px; color: var(--ink-soft); }
+  .guia-card .meta { font-size: 12px; color: var(--ink-soft); }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  /* --- Detalle de recepción --- */
+  .detail-box {
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .detail-box .folio-num { font-size: 20px; font-weight: 700; }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--paper-line);
+    font-size: 13px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .k { color: var(--ink-soft); }
+  .detail-row .v { font-weight: 600; text-align: right; }
+  .file-link {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    margin: 14px 0 18px;
+    background: var(--route);
+    color: var(--paper-card);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .verdict-group { display: flex; gap: 10px; margin-bottom: 16px; }
+  .verdict-btn {
+    flex: 1;
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: 2px solid var(--ink);
+    background: var(--paper-card);
+    cursor: pointer;
+  }
+  .verdict-btn.selected.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+  .verdict-btn.selected.warn { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    display: none;
+    z-index: 20;
+  }
+  .toast.show { display: block; }
+
+  .loading { text-align: center; padding: 30px; color: var(--ink-soft); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Guías de Traslado</h1>
+  <div class="who" id="whoDisplay"></div>
+</header>
+
+<main>
+
+  <!-- PANTALLA: selección de usuario -->
+  <section id="screen-login" class="screen active">
+    <p class="intro">Selecciona tu bodega y tu nombre para continuar.</p>
+    <div class="field">
+      <label>Bodega</label>
+      <select id="loginBodega"><option value="">Cargando...</option></select>
+    </div>
+    <div class="field">
+      <label>Nombre</label>
+      <select id="loginNombre" disabled><option value="">Elige tu bodega primero</option></select>
+    </div>
+    <button class="primary" id="btnEntrar" disabled>Entrar</button>
+  </section>
+
+  <!-- PANTALLA: menú principal -->
+  <section id="screen-menu" class="screen">
+    <button class="menu-card" id="cardSubir">
+      <div class="tag">Bodega origen</div>
+      <h2>Subir guía</h2>
+      <p>Registra una guía de traslado que estás despachando.</p>
+    </button>
+    <button class="menu-card" id="cardRecepcionar">
+      <div class="tag">Bodega destino</div>
+      <h2>Recepcionar</h2>
+      <p>Revisa y cierra guías que llegaron a tu bodega.</p>
+      <span class="count" id="pendCount">—</span>
+    </button>
+  </section>
+
+  <!-- PANTALLA: subir guía -->
+  <section id="screen-subir" class="screen">
+    <div class="flow-header">
+      <button class="back-btn" data-back="screen-menu">←</button>
+      <h2>Subir guía</h2>
+    </div>
+    <div class="field">
+      <label>N° Folio</label>
+      <input type="text" id="subFolio" inputmode="numeric" placeholder="Ej: 15307">
+    </div>
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="subFecha">
+    </div>
+    <div class="field">
+      <label>Bodega origen</label>
+      <input type="text" id="subOrigen" disabled>
+    </div>
+    <div class="field">
+      <label>Bodega destino</label>
+      <select id="subDestino"></select>
+    </div>
+    <div class="field">
+      <label>Total kilos</label>
+      <input type="number" id="subKilos" inputmode="decimal" step="0.1" placeholder="Ej: 976">
+    </div>
+    <div class="field">
+      <label>Foto o PDF de la guía</label>
+      <div class="file-drop" id="fileDrop">Toca para adjuntar (cámara o archivo)</div>
+      <input type="file" id="archivoInput" accept="image/*,application/pdf" capture="environment">
+    </div>
+    <button class="primary" id="btnGuardarGuia">Registrar guía</button>
+  </section>
+
+  <!-- PANTALLA: lista de pendientes -->
+  <section id="screen-pendientes" class="screen">
+    <div class="flow-header">
+      <button class="back-btn" data-back="screen-menu">←</button>
+      <h2>Guías pendientes</h2>
+    </div>
+    <div id="pendientesList"><div class="loading">Cargando...</div></div>
+  </section>
+
+  <!-- PANTALLA: detalle / cierre -->
+  <section id="screen-detalle" class="screen">
+    <div class="flow-header">
+      <button class="back-btn" data-back="screen-pendientes">←</button>
+      <h2>Recepcionar guía</h2>
+    </div>
+    <div class="detail-box" id="detalleBox"></div>
+    <a href="#" target="_blank" class="file-link" id="detalleArchivo">Ver documento adjunto</a>
+
+    <div class="field">
+      <label>¿Corresponde con lo físico?</label>
+      <div class="verdict-group">
+        <button class="verdict-btn" id="btnConforme" data-verdict="ok">✓ Conforme</button>
+        <button class="verdict-btn" id="btnDiferencia" data-verdict="warn">✕ Con diferencia</button>
+      </div>
+    </div>
+    <div class="field" id="obsField" style="display:none">
+      <label>Observación</label>
+      <textarea id="obsTexto" placeholder="Describe la diferencia encontrada..."></textarea>
+    </div>
+    <button class="primary" id="btnCerrar" disabled>Cerrar proceso</button>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ======= CONFIG =======
+// Pega aquí la URL del Web App de Apps Script (termina en /exec)
+const CONFIG = {
+  API_URL: 'PEGA_AQUI_LA_URL_DEL_WEB_APP'
+};
+// =======================
+
+let STATE = {
+  usuarios: [],
+  bodegas: [],
+  usuario: null,
+  bodega: null,
+  archivoData: null, // {base64, nombre, mimeType}
+  detalleActual: null,
+  verdict: null
+};
+
+const $ = (id) => document.getElementById(id);
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+async function api(params, method = 'GET', body = null) {
+  let url = CONFIG.API_URL;
+  if (method === 'GET') {
+    url += '?' + new URLSearchParams(params).toString();
+    const res = await fetch(url);
+    return res.json();
+  } else {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+}
+
+// ---- Init ----
+async function init() {
+  const cached = localStorage.getItem('gt_usuario');
+  const data = await api({ action: 'init' });
+  STATE.usuarios = data.usuarios || [];
+  STATE.bodegas = data.bodegas || [];
+
+  const bodegaSel = $('loginBodega');
+  bodegaSel.innerHTML = '<option value="">Elige tu bodega</option>' +
+    STATE.bodegas.map(b => `<option value="${b}">${b}</option>`).join('');
+
+  if (cached) {
+    const u = JSON.parse(cached);
+    STATE.usuario = u.nombre;
+    STATE.bodega = u.bodega;
+    enterApp();
+  }
+}
+
+$('loginBodega').addEventListener('change', () => {
+  const bodega = $('loginBodega').value;
+  const nombreSel = $('loginNombre');
+  const opciones = STATE.usuarios.filter(u => u.bodega === bodega);
+  if (!bodega) {
+    nombreSel.disabled = true;
+    nombreSel.innerHTML = '<option value="">Elige tu bodega primero</option>';
+    return;
+  }
+  nombreSel.disabled = false;
+  nombreSel.innerHTML = '<option value="">Elige tu nombre</option>' +
+    opciones.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
+  $('btnEntrar').disabled = true;
+});
+
+$('loginNombre').addEventListener('change', () => {
+  $('btnEntrar').disabled = !$('loginNombre').value;
+});
+
+$('btnEntrar').addEventListener('click', () => {
+  STATE.usuario = $('loginNombre').value;
+  STATE.bodega = $('loginBodega').value;
+  localStorage.setItem('gt_usuario', JSON.stringify({ nombre: STATE.usuario, bodega: STATE.bodega }));
+  enterApp();
+});
+
+function enterApp() {
+  $('whoDisplay').innerHTML = `${STATE.usuario} · ${STATE.bodega} <button id="btnSalir">cambiar</button>`;
+  $('btnSalir').addEventListener('click', () => {
+    localStorage.removeItem('gt_usuario');
+    location.reload();
+  });
+  refreshPendCount();
+  showScreen('screen-menu');
+}
+
+async function refreshPendCount() {
+  const data = await api({ action: 'pendientes', bodega: STATE.bodega });
+  $('pendCount').textContent = (data.pendientes || []).length + ' pendiente(s)';
+}
+
+// ---- Navegación ----
+document.querySelectorAll('[data-back]').forEach(btn => {
+  btn.addEventListener('click', () => showScreen(btn.dataset.back));
+});
+
+$('cardSubir').addEventListener('click', () => {
+  $('subOrigen').value = STATE.bodega;
+  $('subDestino').innerHTML = STATE.bodegas
+    .filter(b => b !== STATE.bodega)
+    .map(b => `<option value="${b}">${b}</option>`).join('');
+  $('subFecha').value = new Date().toISOString().slice(0, 10);
+  $('subFolio').value = '';
+  $('subKilos').value = '';
+  STATE.archivoData = null;
+  $('fileDrop').textContent = 'Toca para adjuntar (cámara o archivo)';
+  $('fileDrop').classList.remove('has-file');
+  showScreen('screen-subir');
+});
+
+$('cardRecepcionar').addEventListener('click', async () => {
+  showScreen('screen-pendientes');
+  $('pendientesList').innerHTML = '<div class="loading">Cargando...</div>';
+  const data = await api({ action: 'pendientes', bodega: STATE.bodega });
+  renderPendientes(data.pendientes || []);
+});
+
+// ---- Subir guía ----
+$('fileDrop').addEventListener('click', () => $('archivoInput').click());
+$('archivoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    STATE.archivoData = {
+      base64: reader.result.split(',')[1],
+      nombre: file.name,
+      mimeType: file.type
+    };
+    $('fileDrop').textContent = '✓ ' + file.name;
+    $('fileDrop').classList.add('has-file');
+  };
+  reader.readAsDataURL(file);
+});
+
+$('btnGuardarGuia').addEventListener('click', async () => {
+  const folio = $('subFolio').value.trim();
+  const fecha = $('subFecha').value;
+  const destino = $('subDestino').value;
+  const kilos = $('subKilos').value;
+
+  if (!folio || !fecha || !destino || !kilos) {
+    toast('Completa todos los campos');
+    return;
+  }
+  $('btnGuardarGuia').disabled = true;
+  $('btnGuardarGuia').textContent = 'Guardando...';
+
+  const payload = {
+    action: 'crearGuia',
+    folio, fecha,
+    bodegaOrigen: STATE.bodega,
+    bodegaDestino: destino,
+    totalKilos: kilos,
+    usuarioDespacho: STATE.usuario
+  };
+  if (STATE.archivoData) {
+    payload.archivoBase64 = STATE.archivoData.base64;
+    payload.archivoNombre = STATE.archivoData.nombre;
+    payload.archivoMimeType = STATE.archivoData.mimeType;
+  }
+
+  const res = await api({}, 'POST', payload);
+  $('btnGuardarGuia').disabled = false;
+  $('btnGuardarGuia').textContent = 'Registrar guía';
+
+  if (res.ok) {
+    toast('Guía registrada');
+    showScreen('screen-menu');
+  } else {
+    toast(res.error || 'Error al guardar');
+  }
+});
+
+// ---- Pendientes ----
+function renderPendientes(lista) {
+  if (!lista.length) {
+    $('pendientesList').innerHTML = '<div class="empty-state">No hay guías pendientes de recepción en tu bodega.</div>';
+    return;
+  }
+  $('pendientesList').innerHTML = lista.map(g => `
+    <div class="guia-card" data-id="${g.id}">
+      <div class="row1">
+        <span class="folio folio-num">N° ${g.folio}</span>
+        <span class="kilos">${g.totalKilos} kg</span>
+      </div>
+      <div class="meta">Desde ${g.bodegaOrigen} · digitó ${g.usuarioDespacho}</div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.guia-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const g = lista.find(x => x.id === card.dataset.id);
+      abrirDetalle(g);
+    });
+  });
+}
+
+function abrirDetalle(g) {
+  STATE.detalleActual = g;
+  STATE.verdict = null;
+  $('detalleBox').innerHTML = `
+    <div class="folio-num" style="margin-bottom:10px">N° ${g.folio}</div>
+    <div class="detail-row"><span class="k">Origen</span><span class="v">${g.bodegaOrigen}</span></div>
+    <div class="detail-row"><span class="k">Destino</span><span class="v">${g.bodegaDestino}</span></div>
+    <div class="detail-row"><span class="k">Total kilos</span><span class="v">${g.totalKilos} kg</span></div>
+    <div class="detail-row"><span class="k">Digitó</span><span class="v">${g.usuarioDespacho}</span></div>
+    <div class="detail-row"><span class="k">Fecha guía</span><span class="v">${g.fecha}</span></div>
+  `;
+  const link = $('detalleArchivo');
+  if (g.archivoURL) {
+    link.href = g.archivoURL;
+    link.style.display = 'block';
+  } else {
+    link.style.display = 'none';
+  }
+  $('btnConforme').classList.remove('selected', 'ok');
+  $('btnDiferencia').classList.remove('selected', 'warn');
+  $('obsField').style.display = 'none';
+  $('obsTexto').value = '';
+  $('btnCerrar').disabled = true;
+  showScreen('screen-detalle');
+}
+
+$('btnConforme').addEventListener('click', () => {
+  STATE.verdict = true;
+  $('btnConforme').classList.add('selected', 'ok');
+  $('btnDiferencia').classList.remove('selected', 'warn');
+  $('obsField').style.display = 'none';
+  $('btnCerrar').disabled = false;
+});
+
+$('btnDiferencia').addEventListener('click', () => {
+  STATE.verdict = false;
+  $('btnDiferencia').classList.add('selected', 'warn');
+  $('btnConforme').classList.remove('selected', 'ok');
+  $('obsField').style.display = 'block';
+  $('btnCerrar').disabled = false;
+});
+
+$('btnCerrar').addEventListener('click', async () => {
+  if (STATE.verdict === false && !$('obsTexto').value.trim()) {
+    toast('Describe la diferencia encontrada');
+    return;
+  }
+  $('btnCerrar').disabled = true;
+  $('btnCerrar').textContent = 'Cerrando...';
+
+  const res = await api({}, 'POST', {
+    action: 'cerrarGuia',
+    id: STATE.detalleActual.id,
+    conforme: STATE.verdict,
+    usuarioRecepcion: STATE.usuario,
+    observacion: $('obsTexto').value.trim()
+  });
+
+  $('btnCerrar').textContent = 'Cerrar proceso';
+
+  if (res.ok) {
+    toast('Proceso cerrado');
+    refreshPendCount();
+    showScreen('screen-menu');
+  } else {
+    $('btnCerrar').disabled = false;
+    toast(res.error || 'Error al cerrar');
+  }
+});
+
+init();
+</script>
+</body>
+</html>
